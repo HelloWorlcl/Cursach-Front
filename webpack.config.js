@@ -5,7 +5,8 @@ module.exports = {
     entry: './src/index.jsx',
     output: {
         path: path.resolve('dist'),
-        filename: 'bundle.js'
+        filename: 'bundle.js',
+        publicPath: '/'
     },
     resolve: {
         extensions: ['.js', '.jsx']
@@ -19,6 +20,10 @@ module.exports = {
                 query: {
                     presets: ['react', 'es2015', 'stage-3']
                 }
+            },
+            {
+                test: /\.css$/,
+                loader: 'style-loader!css-loader'
             }
         ]
     },

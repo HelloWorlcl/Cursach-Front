@@ -8,6 +8,12 @@ import { PrivateRoute } from '../_components';
 import { HomePage } from '../HomePage';
 import { LoginPage } from '../LoginPage';
 import { RegisterPage } from '../RegisterPage';
+import ClientsList from '../_components/ClientsList';
+import CarsList from '../_components/CarsList'
+import BreakdownsList from '../_components/BreakdownsList';
+import ClientCarsList from '../_components/ClientCarsList';
+import CarBreakdownsList from '../_components/CarBreakdownsList';
+import 'react-table/react-table.css';
 
 class App extends React.Component {
     constructor(props) {
@@ -23,21 +29,22 @@ class App extends React.Component {
     render() {
         const { alert } = this.props;
         return (
-            <div className="jumbotron">
-                <div className="container">
-                    <div className="col-sm-8 col-sm-offset-2">
-                        {alert.message &&
-                            <div className={`alert ${alert.type}`}>{alert.message}</div>
-                        }
-                        <Router history={history}>
-                            <div>
-                                <PrivateRoute exact path="/" component={HomePage} />
-                                <Route path="/login" component={LoginPage} />
-                                <Route path="/register" component={RegisterPage} />
-                            </div>
-                        </Router>
+            <div>
+                {alert.message &&
+                    <div className={`alert ${alert.type}`}>{alert.message}</div>
+                }
+                <Router history={history}>
+                    <div>
+                        <PrivateRoute exact path="/" component={HomePage} />
+                        <Route path="/login" component={LoginPage} />
+                        <Route path="/register" component={RegisterPage} />
+                        <PrivateRoute path="/clients" component={ClientsList} />
+                        <PrivateRoute path="/cars" component={CarsList} />
+                        <PrivateRoute path="/breakdowns" component={BreakdownsList} />
+                        <PrivateRoute path="/client/cars" component={ClientCarsList} />
+                        <PrivateRoute path="/car/breakdowns" component={CarBreakdownsList} />
                     </div>
-                </div>
+                </Router>
             </div>
         );
     }
@@ -51,4 +58,4 @@ function mapStateToProps(state) {
 }
 
 const connectedApp = connect(mapStateToProps)(App);
-export { connectedApp as App }; 
+export { connectedApp as App };

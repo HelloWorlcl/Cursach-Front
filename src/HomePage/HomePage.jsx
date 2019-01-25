@@ -3,10 +3,15 @@ import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
 
 import { userActions } from '../_actions';
+import { action as toggleMenu } from 'redux-burger-menu';
+import { Menu } from '../_components/shared';
 
 class HomePage extends React.Component {
     componentDidMount() {
+        const isOpen = true;
+
         this.props.dispatch(userActions.getAll());
+        this.props.dispatch(toggleMenu(isOpen));
     }
 
     handleDeleteUser(id) {
@@ -16,7 +21,9 @@ class HomePage extends React.Component {
     render() {
         const { user, users } = this.props;
         return (
-            <div className="col-md-6 col-md-offset-3">
+            <React.Fragment>
+                <Menu />
+                <div className="col-md-6 col-md-offset-3">
                 <h1>Hi {user.firstName}!</h1>
                 <p>You're logged in with React!!</p>
                 <h3>All registered users:</h3>
@@ -40,6 +47,7 @@ class HomePage extends React.Component {
                     <Link to="/login">Logout</Link>
                 </p>
             </div>
+            </React.Fragment>
         );
     }
 }
