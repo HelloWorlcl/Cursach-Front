@@ -12,8 +12,10 @@ class ClientsList extends Component {
 
         this.state = {
             data: [],
-            isBatchEdit: false,
+            isbatchEdit: false,
+            isBatchDelete: false,
             editedData: {},
+            userIdToBeDeleted: null,
             userIdsToBeDeleted: [],
             addModal: false,
             deleteModal: false
@@ -29,18 +31,25 @@ class ClientsList extends Component {
         this.handleSubmit = this.handleSubmit.bind(this);
         this.handleEdit = this.handleEdit.bind(this);
         this.handleDelete = this.handleDelete.bind(this);
+        this.handleInputChange = this.handleInputChange.bind(this);
 
         this.createUser = this.createUser.bind(this);
         this.editUser = this.editUser.bind(this);
         this.deleteUser = this.deleteUser.bind(this);
 
         this.prepareEditQuery = this.prepareEditQuery.bind(this);
+        this.prepareDeleteQuery = this.prepareDeleteQuery.bind(this);
+
         this.prepareEditDataToBeSent = this.prepareEditDataToBeSent.bind(this);
+        this.prepareSingleEditDataToBeSent = this.prepareSingleEditDataToBeSent.bind(this);
+
         this.prepareBatchEditQuery = this.prepareBatchEditQuery.bind(this);
         this.prepareSingleEditQuery = this.prepareSingleEditQuery.bind(this);
-        this.prepareSingleEditDataToBeSent = this.prepareSingleEditDataToBeSent.bind(this);
+
         this.getFirstEditedUserId = this.getFirstEditedUserId.bind(this);
         this.getUpdatedData = this.getUpdatedData.bind(this);
+
+        this.buildIdBatchQuery = this.buildIdBatchQuery.bind(this);
     }
 
     componentDidMount() {
@@ -66,7 +75,12 @@ class ClientsList extends Component {
                 width: 75,
                 Cell: row => (
                     <React.Fragment>
-                        <Input type='checkbox' />
+                        <Input
+                            type="checkbox"
+                            className='select-checkbox'
+                            onChange={this.handleInputChange}
+                            data-index={row.original.id}
+                        />
                     </React.Fragment>
                 )
             },
@@ -145,8 +159,16 @@ class ClientsList extends Component {
         });
     }
 
-    handleDeleteToggle() {
+    handleDeleteToggle(event = null, batchDelete = false) {
+        let userId = null;
+
+        if (event && !batchDelete) {
+            userId = +event.target.dataset.index;
+        }
+
         this.setState({
+            batchDelete,
+            userIdToBeDeleted: userId,
             deleteModal: !this.state.deleteModal
         });
     }
@@ -165,16 +187,7 @@ class ClientsList extends Component {
         this.createUser(data);
         this.handleAddToggle();
     }
-
-    handleEdit() {
-        this.editUser();
-    }
-
-    handleDelete(userId) {
-        this.deleteUser(userId);
-        this.handleDeleteToggle();
-    }
-
+    
     createUser(data) {
         const { url, clients } = SERVER_SETTINGS;
         const query = url + clients;
@@ -188,6 +201,10 @@ class ClientsList extends Component {
                 });
             })
             .catch(error => console.log(error));
+    }
+
+    handleEdit() {
+        this.editUser();
     }
 
     editUser() {
@@ -220,9 +237,9 @@ class ClientsList extends Component {
     }
 
     prepareBatchEditQuery() {
-        const { url, batchEdit, clients } = SERVER_SETTINGS;
+        const { url, batch, clients } = SERVER_SETTINGS;
 
-        return url + batchEdit + clients;
+        return url + batch + clients;
     }
 
     prepareSingleEditQuery(userId) {
@@ -258,13 +275,79 @@ class ClientsList extends Component {
         return updatedData;
     }
 
-    deleteUser(userId) {
-        console.log(`User with id = ${userId} was deleted`);
+    handleDelete() {
+        this.deleteUser(this.prepareDeleteQuery());
+        this.handleDeleteToggle();
+    }
+
+    prepareDeleteQuery() {
+        const { batchDelete, userIdToBeDeleted, userIdsToBeDeleted } = this.state;
+        const { url, clients } = SERVER_SETTINGS;
+        let userIdQuery = userIdToBeDeleted;
+        let completeQuery = url;
+
+        if (batchDelete) {
+            completeQuery += this.buildIdBatchQuery();
+        } else {
+            completeQuery += clients + '/' + userIdQuery
+        }
+        
+        return completeQuery;
+    }
+
+    buildIdBatchQuery() {
+        const { batch, clients } = SERVER_SETTINGS;
+        const { userIdsToBeDeleted } = this.state;
+        let idBatchQuery = '?';
+
+        userIdsToBeDeleted.forEach(userId => idBatchQuery += `ids[]=${userId}&`);
+
+        return batch + clients + idBatchQuery;
+    }
+
+    deleteUser(query) {
+        const { data, batchDelete } = this.state;
+        let { userIdToBeDeleted, userIdsToBeDeleted } = this.state;
+
+        axios.delete(query)
+            .then(response => {
+                if (response.status === 204) {
+                    let updatedData = [];
+                    if (batchDelete) {
+                        updatedData = data.filter(user => !userIdsToBeDeleted.includes(user.id));
+                        userIdsToBeDeleted = [];
+                    } else {
+                        updatedData = data.filter(user => user.id !== userIdToBeDeleted);
+                        userIdToBeDeleted = null;
+                    }
+
+                    this.setState({
+                        data: updatedData,
+                        userIdToBeDeleted,
+                        userIdsToBeDeleted
+                    });
+                }
+            })
+            .catch(error => console.log(error));
+    }
+    
+    handleInputChange(event) {
+        const userId = event.target.dataset.index;
+        let { userIdsToBeDeleted } = this.state;
+
+        if (event.target.checked) {
+            userIdsToBeDeleted.push(+userId);
+        } else {
+            userIdsToBeDeleted = userIdsToBeDeleted.filter(oldUserId => oldUserId !== userId);
+        }
+
+        this.setState({ userIdsToBeDeleted });
     }
 
     render() {
-        const { data, editedData, addModal } = this.state;
+        const { data, editedData, userIdsToBeDeleted, addModal } = this.state;
         const isEmptyEditedData = !Object.keys(editedData).length;
+        const isEmptyUserIdsToBeDeleted = !userIdsToBeDeleted.length;
 
         return (
             <React.Fragment>
@@ -283,10 +366,10 @@ class ClientsList extends Component {
                 <DeleteClientModal
                     isOpen={this.state.deleteModal}
                     onToggle={this.handleDeleteToggle}
-                    onDelete={() => this.handleDelete(row.original.id)}
+                    onDelete={this.handleDelete}
                 />
                 <Button color='warning' disabled={isEmptyEditedData} onClick={this.handleEdit}>Save</Button>
-                <Button color='danger' disabled onClick={this.handleDelete}>Delete</Button>
+                <Button color='danger' disabled={isEmptyUserIdsToBeDeleted} onClick={event => this.handleDeleteToggle(event, true)}>Delete</Button>
             </React.Fragment>
          );
     }
