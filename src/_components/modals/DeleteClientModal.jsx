@@ -11,5 +11,5 @@ export const DeleteClientModal = ({ isOpen, onToggle, onDelete }) => {
             </ModalBody>
         </Modal>
     );
-}
+};
  

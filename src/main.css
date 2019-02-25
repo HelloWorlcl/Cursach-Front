@@ -51,11 +51,22 @@
     background: rgba(0, 0, 0, 0.3);
   }
 
-  .list-table .rt-table {
+  .list-table {
     margin-top: 100px;
   }
 
   .select-checkbox {
     margin: 15px 0 0 30px;
   }
+
+  .footer.control-buttons {
+    margin: 1rem;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+.footer.control-buttons button {
+  margin-left: 20px;
+}
+
   

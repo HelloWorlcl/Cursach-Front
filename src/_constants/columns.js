@@ -1,28 +1,4 @@
 import React from 'react';
-import { Button } from 'reactstrap';
-
-export const CLIENT_COLUMNS = [
-    {
-        Header: 'Name',
-        accessor: 'name'
-    },
-    {
-        Header: 'Email',
-        accessor: 'email'
-    },
-    {
-        Header: 'Phone',
-        accessor: 'phone'
-    },
-    {
-        Header: 'Address',
-        accessor: 'address'
-    },
-    {
-        Header: 'Avatar',
-        accessor: 'avatar'
-    }
-];
 
 export const CARS_COLUMNS = [
     {

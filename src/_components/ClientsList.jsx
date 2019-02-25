@@ -2,9 +2,8 @@ import React, { Component } from 'react';
 import axios from 'axios';
 import ReactTable from 'react-table';
 import { Button, Input } from 'reactstrap';
-import { Menu } from './shared';
+import { Menu, ControlButtons, AddDeleteModals } from './shared';
 import { SERVER_SETTINGS } from '../_constants';
-import { AddClientModal, DeleteClientModal } from './modals';
 
 class ClientsList extends Component {
     constructor(props) {
@@ -115,10 +114,6 @@ class ClientsList extends Component {
                 Header: 'Address',
                 accessor: 'address',
                 Cell: this.renderEditable.bind(this)
-            },
-            {
-                Header: 'Avatar',
-                accessor: 'avatar',
             }
         ];
     }
@@ -332,11 +327,11 @@ class ClientsList extends Component {
     }
     
     handleInputChange(event) {
-        const userId = event.target.dataset.index;
+        const userId = +event.target.dataset.index;
         let { userIdsToBeDeleted } = this.state;
 
         if (event.target.checked) {
-            userIdsToBeDeleted.push(+userId);
+            userIdsToBeDeleted.push(userId);
         } else {
             userIdsToBeDeleted = userIdsToBeDeleted.filter(oldUserId => oldUserId !== userId);
         }
@@ -345,31 +340,39 @@ class ClientsList extends Component {
     }
 
     render() {
-        const { data, editedData, userIdsToBeDeleted, addModal } = this.state;
+        const {
+            data,
+            editedData,
+            userIdsToBeDeleted,
+            addModal,
+            deleteModal
+        } = this.state;
         const isEmptyEditedData = !Object.keys(editedData).length;
         const isEmptyUserIdsToBeDeleted = !userIdsToBeDeleted.length;
 
         return (
             <React.Fragment>
                 <Menu />
+                <ControlButtons
+                    isEmptyEditedData={isEmptyEditedData}
+                    isEmptyUserIdsToBeDeleted={isEmptyUserIdsToBeDeleted}
+                    onAddClick={this.handleAddToggle}
+                    onSaveClick={this.handleEdit}
+                    onDeleteClick={this.handleDeleteToggle}
+                />
                 <ReactTable
                     data={data}
                     columns={this.columns}
                     className='list-table'
                 />
-                <Button color='success' onClick={this.handleAddToggle}><i className="fas fa-user-plus"></i></Button>
-                <AddClientModal
-                    isOpen={addModal}
-                    onToggle={this.handleAddToggle}
+                <AddDeleteModals
+                    isAddModalOpen={addModal}
+                    isDeleteModalOpen={deleteModal}
+                    onAddToggle={this.handleAddToggle}
+                    onDeleteToggle={this.handleDeleteToggle}
                     onSubmit={this.handleSubmit}
-                />
-                <DeleteClientModal
-                    isOpen={this.state.deleteModal}
-                    onToggle={this.handleDeleteToggle}
                     onDelete={this.handleDelete}
                 />
-                <Button color='warning' disabled={isEmptyEditedData} onClick={this.handleEdit}>Save</Button>
-                <Button color='danger' disabled={isEmptyUserIdsToBeDeleted} onClick={event => this.handleDeleteToggle(event, true)}>Delete</Button>
             </React.Fragment>
          );
     }

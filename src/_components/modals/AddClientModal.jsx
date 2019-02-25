@@ -17,5 +17,5 @@ export const AddClientModal = ({ isOpen, onToggle, onSubmit }) => {
             </ModalBody>
         </Modal>
     );
-}
+};
  
